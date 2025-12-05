@@ -55,7 +55,17 @@ def extract_node(state: AgentState) -> AgentState:
     image_data = state.get("image_data")
     pdf_data = state.get("pdf_data")
     audio_data = state.get("audio_data")
+    cached_extraction = state.get("cached_extraction")
     extracted_text = ""
+    
+    # If we have cached extraction from previous file and files are present, use cache
+    if cached_extraction and (image_data or pdf_data or audio_data):
+        print("[Cache] Using cached file extraction")
+        if text_input:
+            extracted_text = f"{cached_extraction}\n\n[User clarification]: {text_input}"
+        else:
+            extracted_text = cached_extraction
+        return {**state, "extracted_text": extracted_text}
 
     # Check for YouTube URL first
     video_id = extract_youtube_video_id(text_input)
@@ -70,7 +80,7 @@ def extract_node(state: AgentState) -> AgentState:
         except Exception as e:
             print(f"[YouTube] Error: {str(e)}")
             extracted_text = "[Error: Cannot fetch YouTube transcript — no captions or invalid URL]"
-        return {**state, "extracted_text": extracted_text, "is_youtube": True}
+        return {**state, "extracted_text": extracted_text, "is_youtube": True, "cached_extraction": extracted_text}
 
     if text_input:
         extracted_text = text_input
@@ -136,7 +146,13 @@ def extract_node(state: AgentState) -> AgentState:
         except Exception as e:
             extracted_text += f"[Audio Error: {str(e)}]"
 
+    final_text = extracted_text.strip() if extracted_text else "[No input detected]"
+    
+    # Cache extraction if we processed files (not just text input)
+    should_cache = bool(image_data or pdf_data or audio_data)
+    
     return {
         **state,
-        "extracted_text": extracted_text.strip() if extracted_text else "[No input detected]"
+        "extracted_text": final_text,
+        "cached_extraction": final_text if should_cache else cached_extraction
     }

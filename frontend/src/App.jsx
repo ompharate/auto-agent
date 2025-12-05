@@ -5,6 +5,7 @@ import MessageInput from './components/MessageInput';
 const App = () => {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [lastFileContext, setLastFileContext] = useState(null);
   const messagesEndRef = useRef(null);
 
   const handleSend = async ({ text, file, fileType, filePreview }) => {
@@ -23,12 +24,23 @@ const App = () => {
     setIsLoading(true);
 
     try {
-      
       const formData = new FormData();
       if (text) formData.append('text', text);
-      if (file && fileType === 'image') formData.append('image', file);
-      if (file && fileType === 'pdf') formData.append('pdf', file);
-      if (file && fileType === 'audio') formData.append('audio', file);
+      
+      // If new file is uploaded, store it as context
+      if (file && fileType) {
+        setLastFileContext({ file, fileType });
+        if (fileType === 'image') formData.append('image', file);
+        else if (fileType === 'pdf') formData.append('pdf', file);
+        else if (fileType === 'audio') formData.append('audio', file);
+      } 
+      // If no new file but we have previous file context,re send it
+      else if (lastFileContext) {
+        const { file: prevFile, fileType: prevType } = lastFileContext;
+        if (prevType === 'image') formData.append('image', prevFile);
+        else if (prevType === 'pdf') formData.append('pdf', prevFile);
+        else if (prevType === 'audio') formData.append('audio', prevFile);
+      }
 
 
       const response = await fetch('http://localhost:8000/api/process', {
@@ -49,6 +61,10 @@ const App = () => {
       };
 
       setMessages((prev) => [...prev, agentMessage]);
+      
+      if (data.final_result && !data.clarification_question) {
+        setLastFileContext(null);
+      }
     } catch (error) {
       console.error('Error:', error);
       

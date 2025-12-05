@@ -14,3 +14,4 @@ class AgentState(TypedDict):
     clarification_question: Optional[str]
     final_result: Optional[str]
     is_youtube: Optional[bool]
+    cached_extraction: Optional[str]

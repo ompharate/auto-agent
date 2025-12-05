@@ -48,6 +48,7 @@ async def process_request(
         "clarification_question": None,
         "final_result": None,
         "is_youtube": False,
+        "cached_extraction": None,
     }
     
     try:
