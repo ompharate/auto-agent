@@ -10,6 +10,9 @@ from state import AgentState
 import whisper
 import tempfile
 import os
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def extract_youtube_video_id(text: str):
@@ -60,7 +63,7 @@ def extract_node(state: AgentState) -> AgentState:
     
     # If we have cached extraction from previous file and files are present, use cache
     if cached_extraction and (image_data or pdf_data or audio_data):
-        print("[Cache] Using cached file extraction")
+        logger.info("Using cached file extraction")
         if text_input:
             extracted_text = f"{cached_extraction}\n\n[User clarification]: {text_input}"
         else:
@@ -71,15 +74,15 @@ def extract_node(state: AgentState) -> AgentState:
     video_id = extract_youtube_video_id(text_input)
     if video_id:
         try:
-            print(f"[YouTube] Fetching transcript for video ID: {video_id}")
+            logger.info(f"Fetching YouTube transcript for video ID: {video_id}")
             api = YouTubeTranscriptApi()
             transcript = api.fetch(video_id)
             combined = " ".join([t.text for t in transcript])
-            print(f"[YouTube] Transcript fetched: {len(combined)} characters")
+            logger.info(f"YouTube transcript fetched successfully: {len(combined)} characters")
             extracted_text = f"[YouTube Video Transcript]\n\n{combined}"
         except Exception as e:
-            print(f"[YouTube] Error: {str(e)}")
-            extracted_text = "[Error: Cannot fetch YouTube transcript — no captions or invalid URL]"
+            logger.error(f"YouTube transcript fetch failed: {str(e)}")
+            extracted_text = "[Error: Cannot fetch YouTube transcript — no captions available or invalid URL]"
         return {**state, "extracted_text": extracted_text, "is_youtube": True, "cached_extraction": extracted_text}
 
     if text_input:
@@ -88,13 +91,16 @@ def extract_node(state: AgentState) -> AgentState:
     # Extract text from image using Gemini Vision
     if image_data:
         try:
+            logger.info("Processing image with Gemini Vision OCR")
             image_text = gemini_ocr_image(image_data)
+            logger.info(f"Image OCR completed: {len(image_text)} characters extracted")
             if extracted_text:
                 extracted_text += f"\n\n[Image OCR]\n{image_text}"
             else:
                 extracted_text = image_text
         except Exception as e:
-            extracted_text += f"\n[Image OCR Error: {str(e)}]"
+            logger.error(f"Image OCR failed: {str(e)}")
+            extracted_text += f"\n[Image OCR Error: Failed to process image - {str(e)}]"
 
     # Extract text from PDF (try digital text first, fallback to OCR)
     if pdf_data:
@@ -109,8 +115,9 @@ def extract_node(state: AgentState) -> AgentState:
 
         if not pdf_text.strip():
             try:
-                print("[PDF OCR] Using Gemini Vision for scanned PDF...")
+                logger.info("PDF appears to be scanned, using Gemini Vision OCR")
                 images = convert_from_bytes(pdf_data)
+                logger.info(f"Processing {len(images)} PDF pages with OCR")
                 ocr_text = ""
                 for i, img in enumerate(images):
                     img_buffer = io.BytesIO()
@@ -118,8 +125,10 @@ def extract_node(state: AgentState) -> AgentState:
                     page_text = gemini_ocr_image(img_buffer.getvalue())
                     ocr_text += f"\n--- Page {i+1} (OCR) ---\n{page_text}"
                 pdf_text = ocr_text
+                logger.info(f"PDF OCR completed: {len(pdf_text)} characters extracted")
             except Exception as e:
-                pdf_text = f"[PDF OCR Error: {str(e)}]"
+                logger.error(f"PDF OCR failed: {str(e)}")
+                pdf_text = f"[PDF OCR Error: Failed to process scanned PDF - {str(e)}]"
 
         if extracted_text:
             extracted_text += f"\n\n[PDF Content]\n{pdf_text}"
@@ -129,7 +138,7 @@ def extract_node(state: AgentState) -> AgentState:
     # Transcribe audio using Whisper
     if audio_data:
         try:
-            print("[Audio] Transcribing with Whisper...")
+            logger.info("Transcribing audio with Whisper (base model)")
             with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio:
                 temp_audio.write(audio_data)
                 temp_path = temp_audio.name
@@ -138,13 +147,15 @@ def extract_node(state: AgentState) -> AgentState:
             result = model.transcribe(temp_path)
             audio_text = result.get("text", "").strip()
             os.unlink(temp_path)
+            logger.info(f"Audio transcription completed: {len(audio_text)} characters")
 
             if extracted_text:
                 extracted_text += f"\n\n[Audio Transcript]\n{audio_text}"
             else:
                 extracted_text = audio_text
         except Exception as e:
-            extracted_text += f"[Audio Error: {str(e)}]"
+            logger.error(f"Audio transcription failed: {str(e)}")
+            extracted_text += f"[Audio Error: Failed to transcribe audio - {str(e)}]"
 
     final_text = extracted_text.strip() if extracted_text else "[No input detected]"
     

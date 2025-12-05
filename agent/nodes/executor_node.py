@@ -1,6 +1,9 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import SystemMessage, HumanMessage
 from state import AgentState
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def executor_node(state: AgentState) -> AgentState:
@@ -117,6 +120,7 @@ def executor_node(state: AgentState) -> AgentState:
 
         response = llm.invoke(messages)
         final_result = response.content
+        logger.info(f"Task '{task}' executed successfully: {len(final_result)} characters generated")
 
         return {
             **state,
@@ -124,7 +128,8 @@ def executor_node(state: AgentState) -> AgentState:
         }
 
     except Exception as e:
+        logger.error(f"Executor error for task '{task}': {str(e)}")
         return {
             **state,
-            "final_result": f"Executor error: {str(e)}",
+            "final_result": f"Failed to execute task '{task}': {str(e)}",
         }

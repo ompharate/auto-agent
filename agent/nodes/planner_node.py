@@ -3,6 +3,9 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from state import AgentState
 import json
 import re
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def planner_node(state: AgentState) -> AgentState:
@@ -81,6 +84,8 @@ def planner_node(state: AgentState) -> AgentState:
             needs_clarification = True
             clarification_question = "What would you like me to do with this text? Summarize, analyze sentiment, explain code, or something else?"
 
+        logger.info(f"Task identified: {task}, Clarification needed: {needs_clarification}")
+        
         return {
             **state,
             "task": task,
@@ -90,10 +95,11 @@ def planner_node(state: AgentState) -> AgentState:
         }
 
     except Exception as e:
+        logger.error(f"Planner error: {str(e)}")
         return {
             **state,
             "task": "general_qa",
             "needs_clarification": False,
             "clarification_question": "",
-            "plan": ["Planner encountered an error"],
+            "plan": ["Planning failed - proceeding with general Q&A"],
         }

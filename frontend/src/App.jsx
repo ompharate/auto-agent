@@ -10,6 +10,14 @@ const App = () => {
 
   const handleSend = async ({ text, file, fileType, filePreview }) => {
    
+    const scrollToBottom = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    useEffect(() => {
+      scrollToBottom();
+    }, [messages]);
+
     const userMessage = {
       id: Date.now(),
       role: 'user',
@@ -27,14 +35,14 @@ const App = () => {
       const formData = new FormData();
       if (text) formData.append('text', text);
       
-      // If new file is uploaded, store it as context
+
       if (file && fileType) {
         setLastFileContext({ file, fileType });
         if (fileType === 'image') formData.append('image', file);
         else if (fileType === 'pdf') formData.append('pdf', file);
         else if (fileType === 'audio') formData.append('audio', file);
       } 
-      // If no new file but we have previous file context,re send it
+  
       else if (lastFileContext) {
         const { file: prevFile, fileType: prevType } = lastFileContext;
         if (prevType === 'image') formData.append('image', prevFile);
@@ -98,9 +106,7 @@ const App = () => {
           <div className="flex items-center justify-center h-full text-gray-400">
             <div className="text-center">
               <p className="text-lg">Start a conversation</p>
-              <p className="text-sm mt-2">
-                Send a message or upload an image to begin
-              </p>
+            
             </div>
           </div>
         ) : (

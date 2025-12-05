@@ -4,8 +4,10 @@ from typing import Optional
 from dotenv import load_dotenv
 from graph import create_agent_graph
 from state import AgentState
+from utils.logger import get_logger
 
 load_dotenv()
+logger = get_logger(__name__)
 
 app = FastAPI()
 
@@ -52,6 +54,7 @@ async def process_request(
     }
     
     try:
+        logger.info(f"Processing request - Text: {bool(text)}, Image: {bool(image)}, PDF: {bool(pdf)}, Audio: {bool(audio)}")
         final_state = agent_graph.invoke(initial_state)
         
         response = {
@@ -62,15 +65,28 @@ async def process_request(
             "clarification_question": final_state.get("clarification_question"),
         }
         
+        logger.info(f"Request processed successfully - Task: {response.get('task')}")
         return response
         
     except Exception as e:
-        file_type = "Audio" if audio else "PDF" if pdf else "Image" if image else "Text"
+        logger.error(f"Request processing failed: {str(e)}")
+        file_type = "audio" if audio else "PDF" if pdf else "image" if image else "text input"
+        error_message = f"Failed to process {file_type}. "
+        
+        if "API" in str(e) or "quota" in str(e).lower():
+            error_message += "API service error - please check your API key and quota."
+        elif "whisper" in str(e).lower():
+            error_message += "Audio transcription failed - ensure Whisper model is installed."
+        elif "youtube" in str(e).lower():
+            error_message += "YouTube transcript unavailable - video may not have captions."
+        else:
+            error_message += f"Error: {str(e)}"
+        
         return {
             "extracted_text": text or f"[{file_type}]",
             "plan": [],
             "task": "error",
-            "final_result": f"An error occurred: {str(e)}",
+            "final_result": error_message,
             "clarification_question": None,
         }
 
