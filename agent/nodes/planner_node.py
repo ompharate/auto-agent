@@ -40,12 +40,33 @@ def planner_node(state: AgentState) -> AgentState:
         - unclear
 
         Rules:
-        - Summarization ALWAYS includes 1-line + 3-bullets + 5-sentences.
-        - If text is ambiguous, choose "unclear".
-        - If input contains a YouTube link → task = youtube_transcript.
-        - If the input seems like code → task = code_explain.
-        - If user expresses emotion → task = sentiment.
-        - If user asks a question → task = general_qa.
+
+        1. Only assign a task if the user’s intent is EXPLICIT.
+        2. If the input could map to multiple tasks, choose "unclear".
+        3. Summarization → ONLY when the user explicitly says:
+        - "summarize"
+        - "give a summary"
+
+        4. Sentiment → ONLY when the user explicitly asks for:
+        - sentiment
+        - emotions
+        - tone
+        - feeling
+        OR clearly expresses emotion without requesting another task.
+
+        5. Code explanation → ONLY when:
+        - The user explicitly asks to explain code
+        - OR the text is clearly a code snippet AND asks for explanation
+
+        6. YouTube transcript → ONLY when:
+        - A YouTube URL is present
+
+        7. General QA → ONLY when:
+        - The user asks a direct question
+
+        8. Otherwise → task = "unclear"
+        → Ask a clarification question.
+
 
         Return STRICT JSON:
 
