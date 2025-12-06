@@ -14,8 +14,10 @@ The agent can understand and process **text, images, PDFs, audio, and YouTube li
 
 
 ## High Level Architecture
+![Architecture Diagram](diagrams/high-level-archi.png)
 
 ## LangGraph Workflow
+![langgraphworkflow](diagrams/langgraph-workflow.png)
 
 
 ## Demo Video
