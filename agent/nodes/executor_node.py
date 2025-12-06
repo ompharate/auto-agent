@@ -7,7 +7,6 @@ logger = get_logger(__name__)
 
 
 def executor_node(state: AgentState) -> AgentState:
-    """Execute the identified task and return formatted results."""
 
     task = state.get("task", "general_qa")
     extracted_text = state.get("extracted_text", "")
