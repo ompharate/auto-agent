@@ -21,6 +21,8 @@ The agent can understand and process **text, images, PDFs, audio, and YouTube li
 
 
 ## Demo Video
+[![Watch Demo Video](diagrams/output.png)](youtube.com/watch?v=kEtsiuWTCVM&feature=youtu.be)
+
 
 ## Tech Stack
 
