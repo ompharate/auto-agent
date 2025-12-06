@@ -43,6 +43,7 @@ Click the image below to watch the full demo
 ### Install dependencies
 
 ```bash
+cd agent
 pip install -r requirements.txt
 ```
 
@@ -55,6 +56,7 @@ uvicorn main:app --reload
 ### Start frontend
 
 ```bash
+cd frontend
 npm install
 npm run dev
 ```
