@@ -8,16 +8,11 @@ const App = () => {
   const [lastFileContext, setLastFileContext] = useState(null);
   const messagesEndRef = useRef(null);
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
   const handleSend = async ({ text, file, fileType, filePreview }) => {
-   
-    const scrollToBottom = () => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    useEffect(() => {
-      scrollToBottom();
-    }, [messages]);
-
     const userMessage = {
       id: Date.now(),
       role: 'user',
