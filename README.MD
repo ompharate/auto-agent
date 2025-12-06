@@ -20,7 +20,7 @@ The agent can understand and process **text, images, PDFs, audio, and YouTube li
 ![langgraphworkflow](diagrams/langgraph-workflow.png)
 
 
-## 🎥 Demo Video
+## Demo Video
 Click the image below to watch the full demo 
 
 [![Watch Demo Video](diagrams/output.png)](https://youtu.be/kEtsiuWTCVM)
