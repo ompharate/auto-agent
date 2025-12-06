@@ -20,7 +20,7 @@ def executor_node(state: AgentState) -> AgentState:
     try:
         if task == "summarization":
             prompt = f"""
-                Summarize the following text in 3 formats:
+                Summarize the following text and return response:
 
                 Text:
                 {extracted_text}
@@ -50,7 +50,7 @@ def executor_node(state: AgentState) -> AgentState:
                 Text:
                 {extracted_text}
 
-                Provide your response in this format:
+                Provide your response in markdown format:
 
                 **Sentiment:** [positive/negative/neutral]
 
@@ -67,7 +67,7 @@ def executor_node(state: AgentState) -> AgentState:
                 Code:
                 {extracted_text}
 
-                Provide your response in this format:
+                Provide your response in markdown format:
 
                 **What it does:**
                 [explanation]
